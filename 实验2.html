@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="https://www.baidu.com/favicon.ico">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <style>
+    .container {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    td {
+      width: 1em;
+    }
+  </style>
+</head>
+
+<body>
+  <script>
+    const lowerLetterTable = new Array(26).fill("").map((_, i) => String.fromCharCode('a'.charCodeAt() + i))
+    const playfair = {
+        letter: 'abcdefghiklmnopqrstuvwxyz',
+        appoint: "z",
+        horizontal: true,
+        encrypt() {
+          let key = this.createKey(document.querySelector("#playfairKeyword").value.toLowerCase()),
+            clearText = document.querySelector("#playfairClearText").value.toLowerCase(),
+            cipherText = document.querySelector("#playfairCipherText");
+          let res = "";
+          if ((clearText.length & 1) == 1) clearText += this.appoint;
+          for (let i = 0; i < clearText.length; i += 2) {
+            let char = clearText[i],
+              char1 = clearText[i + 1];
+            let [map, map1] = this.getIndex(key, char, char1);
+            if (map[0] == map1[0]) { //同一行
+              res += key[(map[1] + 1) % 5][map[0]] + key[(map1[1] + 1) % 5][map1[0]];
+            } else if (map[1] == map1[1]) {
+              res += key[map[1]][(map[0] + 1) % 5] + key[map1[1]][(map1[0] + 1) % 5];
+            } else {
+              if (this.horizontal) {
+                res += key[map[1]][map1[0]] + key[map1[1]][map[0]];
+              } else {
+                res += key[map[0]][map1[1]] + key[map1[0]][map[1]];
+              }
+            }
+          }
+          cipherText.value = res;
+        },
+        decrypt() {
+          let key = this.createKey(document.querySelector("#playfairKeyword").value.toLowerCase()),
+            cipherText = document.querySelector("#playfairCipherText").value.toLowerCase(),
+            clearText = document.querySelector("#playfairClearText");
+          let res = "";
+          for (let i = 0; i < cipherText.length; i += 2) {
+            let char = cipherText[i],
+              char1 = cipherText[i + 1];
+            let [map, map1] = this.getIndex(key, char, char1);
+            if (map[0] == map1[0]) { //同一行
+              res += key[(map[1] + 4) % 5][map[0]] + key[(map1[1] + 4) % 5][map1[0]];
+            } else if (map[1] == map1[1]) {
+              res += key[map[1]][(map[0] + 4) % 5] + key[map1[1]][(map1[0] + 4) % 5];
+            } else {
+              if (this.horizontal) {
+                res += key[map[1]][map1[0]] + key[map1[1]][map[0]];
+              } else {
+                res += key[map[0]][map1[1]] + key[map1[0]][map[1]];
+              }
+            }
+          }
+          clearText.value = res;
+        },
+        createKey(key) {
+          let arr = [],
+            arr1 = [];
+          for (let i = 0; i < key.length; i++) {
+            let item = key[i];
+            item = item == "j" ? "i" : item;
+            if (!arr.includes(item)) arr.push(item);
+          }
+          for (let i = 0; i < this.letter.length; i++) {
+            if (!arr.includes(this.letter[i])) arr.push(this.letter[i]);
+          }
+          arr1.push(arr.splice(0, 5));
+          arr1.push(arr.splice(0, 5));
+          arr1.push(arr.splice(0, 5));
+          arr1.push(arr.splice(0, 5));
+          arr1.push(arr.splice(0, 5));
+          console.log(arr1);
+          return arr1;
+        },
+        /**
+         * @param keyMap {[[]]}
+         * @param char {[string,string]}
+         */
+        getIndex(keyMap, ...char) {
+          const res = [];
+          keyMap.forEach((v, i) => { //y
+            v.forEach((v1, i1) => { //x
+              if (v1 == char[0]) res[0] = [i1, i];
+              if (v1 == char[1]) res[1] = [i1, i];
+            });
+          });
+          return res;
+        }
+      },
+      vigenere = {
+        encrypt() {
+          let key = document.querySelector('#vigenereKeyword').value.toLowerCase()
+          let res = document.querySelector('#vigenereClearText').value.toLowerCase().split('').map((c, i) => {
+            let a =
+              lowerLetterTable[(c.charCodeAt() + key[i % key.length].charCodeAt() - 'a'.charCodeAt() * 2) % 26]
+            return a
+          }).join('')
+          document.querySelector('#vigenereCipherText').value = res
+        },
+        decrypt() {
+          let key = document.querySelector('#vigenereKeyword').value.toLowerCase()
+          let res = document.querySelector('#vigenereCipherText').value.toLowerCase().split('').map((c, i) => {
+            let a =
+              lowerLetterTable[(((c.charCodeAt() - key[i % key.length].charCodeAt()) + 26) % 26)]
+            return a
+          }).join('')
+          document.querySelector('#vigenereClearText').value = res
+        }
+      },
+      adfgx = {
+        table: {
+          a: {
+            a: 'b',
+            d: 't',
+            f: 'a',
+            g: 'l',
+            x: 'p'
+          },
+          d: {
+            a: 'd',
+            d: 'h',
+            f: 'o',
+            g: 'z',
+            x: 'k'
+          },
+          f: {
+            a: 'q',
+            d: 'f',
+            f: 'v',
+            g: 's',
+            x: 'n'
+          },
+          g: {
+            a: 'g',
+            d: 'i',
+            f: 'c',
+            g: 'u',
+            x: 'x'
+          },
+          x: {
+            a: 'm',
+            d: 'r',
+            f: 'e',
+            g: 'w',
+            x: 'y'
+          }
+        },
+        randomKeyWord() {
+          let text = document.querySelector('#adfgxKeyword').value
+          document.querySelector('#adfgxKeyword').value = text.split('').sort((a, b) => Math.random() > .5 ? -1 : 1)
+            .join(
+              '')
+          this.updateTable()
+        },
+        updateTable() {
+          console.log('log');
+          let text = document.querySelector('#adfgxKeyword').value
+          if (new Set(text).size == 25) {
+            document.querySelector('#adfgxTable').innerHTML = ''
+            let a = 0
+            document.querySelector('#adfgxTable').append(...new Array(6).fill().map((e, i) => {
+              if (i == 0) {
+                let tr = document.createElement('tr')
+                tr.append(...new Array(6).fill().map((e1, i1) => {
+                  let td = document.createElement('td')
+                  if (i1 != 0) td.innerText = 'adfgx' [i1 - 1]
+                  return td
+                }))
+                return tr
+              } else {
+                let tr = document.createElement('tr')
+                tr.append(...new Array(6).fill().map((e1, i1) => {
+                  let td = document.createElement('td')
+                  if (i1 == 0) td.innerText = 'adfgx' [i - 1]
+                  else td.innerText = text[a++]
+                  return td
+                }))
+                return tr
+              }
+            }))
+            for (let i = 0; i < text.length; i++) {
+              this.table['adfgx' [Math.floor((i / 5))]]['adfgx' [i % 5]] = text[i]
+            }
+          }
+        },
+        encrypt() {
+          let keys = Object.keys(this.table)
+          /** @type {string} */
+          let key = document.querySelector('#adfgxKeyword').value.toLowerCase()
+          let clearText = document.querySelector('#adfgxClearText').value.toLowerCase()
+          /** @type {string} */
+          let word = document.querySelector('#adfgxWord').value.toLowerCase()
+          let keyMap = {},
+            res = ''
+          for (const char of clearText) {
+            for (let i = 0; i < keys.length; i++) {
+              for (let j = 0; j < keys.length; j++) {
+                if (this.table[keys[i]][keys[j]] == (char == 'j' ? 'i' : char)) res += keys[i] + keys[j]
+              }
+            }
+          }
+          for (const w of word) {
+            keyMap[w] = ''
+          }
+          for (let i = 0; i < res.length; i++) {
+            keyMap[word[i % word.length]] += res[i]
+          }
+          res = ''
+          word.split('').sort().forEach((e, i) => {
+            res += keyMap[e]
+          })
+          document.querySelector('#adfgxCipherText').value = res
+        },
+        decrypt() {
+          let keys = Object.keys(this.table)
+          /** @type {string} */
+          let key = document.querySelector('#adfgxKeyword').value.toLowerCase()
+          /** @type {string} */
+          let cipherText = document.querySelector('#adfgxCipherText').value.toLowerCase()
+          /** @type {string} */
+          let word = document.querySelector('#adfgxWord').value.toLowerCase()
+          let keyMap = {},
+            res = ''
+          for (const w of word) {
+            keyMap[w] = ''
+          }
+          let sortWord = word.split('').sort().join('')
+          let n = cipherText.length % word.length
+          let sWord = word.substring(0, n).split('')
+          for (let i = 0, j = 0, k = 0; i < sortWord.length; i++) {
+            if (sWord.includes(sortWord[i])) {
+              keyMap[sortWord[i]] += cipherText.substring(k, k += Math.floor(cipherText.length / sortWord.length) + 1)
+            } else {
+              keyMap[sortWord[i]] += cipherText.substring(k, k += Math.floor(cipherText.length / sortWord.length))
+            }
+          }
+          console.log(keyMap);
+          for (let i = 0, j = 0; i < cipherText.length; i += 2) {
+            let a = keyMap[word[i % word.length]][i % word.length == word.length - 1 ? j++ : j]
+            let b = keyMap[word[(i + 1) % word.length]][(i + 1) % word.length == word.length - 1 ? j++ : j]
+            res += this.table[a][b];
+          }
+          console.log(res);
+          document.querySelector('#adfgxClearText').value = res
+        }
+      }
+  </script>
+  <div class="container">
+    <h2>playfair</h2>
+    <div>
+      <label for="playfairKeyword">密钥：</label>
+      <input type="text" id="playfairKeyword" />
+    </div>
+    <div>
+      <label for="playfairClearText">明文：</label>
+      <input type="text" id="playfairClearText" />
+    </div>
+    <div>
+      <label for="playfairCipherText">密文：</label>
+      <input type="text" id="playfairCipherText" />
+    </div>
+    <div>
+      <label for="playfairAppointLetter">约定字母：</label>
+      <select id="playfairAppointLetter" onchange="playfair.appoint=this.value"></select>
+      <label for="playfairHori">水平选择：</label>
+      <input type="checkbox" id="playfairHori" onchange="playfair.horizontal=this.checked">
+    </div>
+    <div>
+      <button onclick="playfair.encrypt()">加密</button><button onclick="playfair.decrypt()">解密</button>
+    </div>
+  </div>
+  <script>
+    let appointLetter = document.querySelector("#playfairAppointLetter")
+    appointLetter.append(...lowerLetterTable.map((e, i) => {
+      let a = document.createElement("option")
+      if (e == 'j') return ''
+      a.value = a.innerText = e
+      if (e == 'i') a.innerText = 'i/j'
+      return a
+    }).filter(e => e));
+    appointLetter.value = playfair.appoint
+    document.querySelector('#playfairHori').checked = playfair.horizontal
+  </script>
+  <div class="container">
+    <h2>vigenère</h2>
+    <div>
+      <label for="vigenereKeyword">密钥：</label>
+      <input type="text" id="vigenereKeyword" />
+    </div>
+    <div>
+      <label for="vigenereClearText">明文：</label>
+      <input type="text" id="vigenereClearText" />
+    </div>
+    <div>
+      <label for="vigenereCipherText">密文：</label>
+      <input type="text" id="vigenereCipherText" />
+    </div>
+    <div>
+      <button onclick="vigenere.encrypt()">加密</button><button onclick="vigenere.decrypt()">解密</button>
+    </div>
+  </div>
+  <div class="container">
+    <h2>adfgx</h2>
+    <div style="display: flex;justify-content: center;">
+      <div>
+        <div>
+          <label for="adfgxKeyword">密钥：</label>
+          <input type="text" id="adfgxKeyword" oninput="adfgx.updateTable()" />
+        </div>
+        <div>
+          <label for="adfgxKeyword">单词：</label>
+          <input type="text" id="adfgxWord" />
+        </div>
+        <div>
+          <label for="adfgxClearText">明文：</label>
+          <input type="text" id="adfgxClearText" />
+        </div>
+        <div>
+          <label for="adfgxCipherText">密文：</label>
+          <input type="text" id="adfgxCipherText" />
+        </div>
+        <div>
+          <button onclick="adfgx.encrypt()">加密</button><button onclick="adfgx.decrypt()">解密</button>
+        </div>
+      </div>
+      <div>
+        <button onclick="adfgx.randomKeyWord()">随机密钥</button>
+        <table id="adfgxTable" border="1"></table>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.querySelector('#adfgxKeyword').value = 'btalpdhozkqfvsngicuxmrewy'
+    adfgx.updateTable()
+  </script>
+</body>
+
+</html>
